@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>COSMOS — Exploración del Universo</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --void: #02040a;
+  --deep: #060c18;
+  --nebula: #0a1628;
+  --star-white: #f0f4ff;
+  --dim: #7a8baa;
+  --gold: #e8b84b;
+  --gold-pale: #f5d98a;
+  --cyan: #4dd9e8;
+  --cyan-dim: #1a6b78;
+  --red-mars: #c94b2a;
+  --blue-earth: #2a6fc9;
+  --ring-gold: rgba(232,184,75,0.15);
+  --glow-cyan: 0 0 30px rgba(77,217,232,0.4);
+  --glow-gold: 0 0 30px rgba(232,184,75,0.4);
+  --font-display: 'Orbitron', monospace;
+  --font-body: 'Crimson Pro', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--star-white);
+  font-family: var(--font-body);
+  font-size: 18px;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* ── STARFIELD ── */
+#starfield {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; overflow: hidden;
+}
+.star-dot {
+  position: absolute; border-radius: 50%;
+  background: white; animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%,100% { opacity: var(--min-op, 0.2); transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 3rem; height: 64px;
+  background: rgba(2,4,10,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(77,217,232,0.12);
+}
+.logo {
+  font-family: var(--font-display);
+  font-size: 1.2rem; font-weight: 900;
+  letter-spacing: .2em;
+  color: var(--cyan);
+  text-shadow: var(--glow-cyan);
+  text-decoration: none;
+}
+.logo span { color: var(--gold); }
+
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  font-family: var(--font-display); font-size: .6rem;
+  letter-spacing: .15em; text-transform: uppercase;
+  color: var(--dim); text-decoration: none;
+  transition: color .25s, text-shadow .25s;
+  cursor: pointer;
+}
+.nav-links a:hover, .nav-links a.active {
+  color: var(--cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+.search-wrap { position: relative; display: flex; align-items: center; }
+.search-wrap input {
+  background: rgba(77,217,232,0.06);
+  border: 1px solid rgba(77,217,232,0.25);
+  border-radius: 4px;
+  padding: .45rem 1rem .45rem 2.2rem;
+  font-family: var(--font-display); font-size: .55rem;
+  letter-spacing: .1em; color: var(--star-white);
+  width: 200px; outline: none;
+  transition: border-color .25s, width .3s, box-shadow .25s;
+}
+.search-wrap input::placeholder { color: var(--dim); }
+.search-wrap input:focus {
+  border-color: var(--cyan); width: 250px;
+  box-shadow: var(--glow-cyan);
+}
+.search-icon { position: absolute; left: .7rem; color: var(--cyan); font-size: .9rem; }
+#search-results {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+  background: var(--deep); border: 1px solid rgba(77,217,232,0.2);
+  border-radius: 6px; display: none; z-index: 200;
+  overflow: hidden;
+}
+#search-results.show { display: block; }
+.s-item {
+  padding: .6rem 1rem; cursor: pointer;
+  font-family: var(--font-display); font-size: .58rem;
+  letter-spacing: .08em; color: var(--dim);
+  border-bottom: 1px solid rgba(77,217,232,0.08);
+  transition: background .2s, color .2s;
+}
+.s-item:last-child { border-bottom: none; }
+.s-item:hover { background: rgba(77,217,232,0.1); color: var(--cyan); }
+
+/* ── PAGES ── */
+.page { display: none; min-height: 100vh; padding-top: 64px; position: relative; z-index: 1; }
+.page.active { display: block; }
+
+/* ══ HERO ══ */
+.hero {
+  min-height: calc(100vh - 64px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 3rem 2rem;
+  position: relative; overflow: hidden;
+}
+
+.hero-bg-circle {
+  position: absolute;
+  border-radius: 50%; pointer-events: none;
+}
+.hbc1 {
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(77,217,232,0.06) 0%, transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  animation: pulse-glow 6s ease-in-out infinite;
+}
+.hbc2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(232,184,75,0.08) 0%, transparent 70%);
+  top: 30%; right: 10%;
+  animation: pulse-glow 8s ease-in-out infinite 2s;
+}
+@keyframes pulse-glow {
+  0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  50% { transform: translate(-50%,-50%) scale(1.15); opacity: 0.7; }
+}
+
+.hero-pretitle {
+  font-family: var(--font-display); font-size: .62rem;
+  letter-spacing: .35em; color: var(--cyan);
+  text-shadow: var(--glow-cyan);
+  text-transform: uppercase; margin-bottom: 1.5rem;
+  animation: fadeUp .8s ease both;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 900; line-height: 1;
+  color: var(--star-white);
+  letter-spacing: .05em;
+  margin-bottom: .5rem;
+  animation: fadeUp .8s ease .15s both;
+}
+.hero h1 .gold { color: var(--gold); text-shadow: var(--glow-gold); }
+.hero-sub {
+  font-family: var(--font-body); font-style: italic;
+  font-size: 1.3rem; color: var(--dim);
+  max-width: 560px; line-height: 1.7;
+  margin: 1rem auto 2.5rem;
+  animation: fadeUp .8s ease .3s both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Planet orbit animation */
+.solar-preview {
+  position: relative; width: 260px; height: 260px;
+  margin: 2rem auto 3rem;
+  animation: fadeUp .8s ease .45s both;
+}
+.sun {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 54px; height: 54px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%, #ffe07a, #e8b84b, #c97a10);
+  box-shadow: 0 0 40px rgba(232,184,75,0.8), 0 0 80px rgba(232,184,75,0.4);
+  animation: sun-pulse 3s ease-in-out infinite;
+}
+@keyframes sun-pulse {
+  0%,100% { box-shadow: 0 0 40px rgba(232,184,75,0.8), 0 0 80px rgba(232,184,75,0.4); }
+  50% { box-shadow: 0 0 60px rgba(232,184,75,1), 0 0 120px rgba(232,184,75,0.5); }
+}
+.orbit-ring {
+  position: absolute; top: 50%; left: 50%;
+  border-radius: 50%; border: 1px solid rgba(255,255,255,0.08);
+  transform: translate(-50%,-50%);
+}
+.orbit1 { width: 100px; height: 100px; animation: orbit-spin 4s linear infinite; }
+.orbit2 { width: 155px; height: 155px; animation: orbit-spin 8s linear infinite; }
+.orbit3 { width: 220px; height: 220px; animation: orbit-spin 14s linear infinite; }
+@keyframes orbit-spin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+.planet {
+  position: absolute; border-radius: 50%;
+  top: -6px; left: 50%; margin-left: -6px;
+  width: 12px; height: 12px;
+}
+.p1 { background: radial-gradient(circle at 35% 35%, #e8a87c, #c94b2a); box-shadow: 0 0 8px rgba(201,75,42,0.6); }
+.p2 { background: radial-gradient(circle at 35% 35%, #7ec8e8, #2a6fc9); box-shadow: 0 0 10px rgba(42,111,201,0.7); width: 16px; height: 16px; top:-8px; margin-left:-8px; }
+.p3 { background: radial-gradient(circle at 35% 35%, #c8d8e8, #8899aa); box-shadow: 0 0 6px rgba(200,216,232,0.4); width: 10px; height: 10px; top:-5px; margin-left:-5px; }
+
+.btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; animation: fadeUp .8s ease .6s both; }
+.btn {
+  font-family: var(--font-display); font-size: .62rem;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: .85rem 2rem; border-radius: 3px;
+  cursor: pointer; border: none; text-decoration: none;
+  transition: all .25s;
+}
+.btn-primary {
+  background: var(--cyan); color: var(--void);
+  font-weight: 700;
+  box-shadow: var(--glow-cyan);
+}
+.btn-primary:hover { background: var(--gold); box-shadow: var(--glow-gold); transform: translateY(-2px); }
+.btn-outline {
+  background: transparent; color: var(--cyan);
+  border: 1px solid rgba(77,217,232,0.4);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); box-shadow: var(--glow-gold); transform: translateY(-2px); }
+
+/* STATS ROW */
+.stats-row {
+  display: flex; gap: 2px; justify-content: center;
+  flex-wrap: wrap; margin-top: 3rem;
+  animation: fadeUp .8s ease .75s both;
+}
+.stat-block {
+  padding: 1.2rem 2rem;
+  border: 1px solid rgba(77,217,232,0.1);
+  text-align: center; min-width: 140px;
+  background: rgba(77,217,232,0.03);
+  transition: background .2s, border-color .2s;
+}
+.stat-block:hover { background: rgba(77,217,232,0.07); border-color: rgba(77,217,232,0.3); }
+.stat-block strong {
+  display: block;
+  font-family: var(--font-display); font-size: 1.5rem;
+  color: var(--gold); font-weight: 700;
+}
+.stat-block span { font-size: .85rem; color: var(--dim); letter-spacing: .05em; }
+
+/* ══ INNER PAGE SHARED ══ */
+.inner-hero {
+  padding: 4rem 4rem 3rem;
+  border-bottom: 1px solid rgba(77,217,232,0.1);
+  position: relative; overflow: hidden;
+}
+.inner-hero::before {
+  content: '';
+  position: absolute; right: -80px; top: -80px;
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(77,217,232,0.08) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+.page-tag {
+  font-family: var(--font-display); font-size: .58rem;
+  letter-spacing: .25em; color: var(--cyan);
+  text-transform: uppercase; margin-bottom: 1rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.page-tag::before { content: '//'; color: var(--gold); }
+.inner-hero h2 {
+  font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 900; color: var(--star-white);
+  letter-spacing: .06em; margin-bottom: .8rem; line-height: 1.2;
+}
+.inner-hero p { font-family: var(--font-body); font-style: italic; color: var(--dim); font-size: 1.1rem; max-width: 680px; line-height: 1.7; }
+
+.back-btn {
+  font-family: var(--font-display); font-size: .58rem;
+  letter-spacing: .15em; color: var(--dim);
+  background: none; border: none; cursor: pointer;
+  margin-bottom: 1.5rem; display: flex; align-items: center; gap: .5rem;
+  transition: color .2s;
+}
+.back-btn:hover { color: var(--cyan); }
+
+.content-area { padding: 3rem 4rem 4rem; }
+
+/* Tabs */
+.tab-bar { display: flex; gap: 0; margin-bottom: 2.5rem; border-bottom: 1px solid rgba(77,217,232,0.15); }
+.tab-btn {
+  font-family: var(--font-display); font-size: .58rem;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: .8rem 1.4rem; background: none;
+  border: none; color: var(--dim); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color .2s, border-color .2s;
+}
+.tab-btn:hover { color: var(--star-white); }
+.tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); text-shadow: var(--glow-cyan); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Planet Cards */
+.planet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 1.5rem; }
+.planet-card {
+  background: var(--deep);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 6px; overflow: hidden;
+  transition: transform .3s, border-color .3s, box-shadow .3s;
+  cursor: pointer;
+}
+.planet-card:hover { transform: translateY(-6px); border-color: rgba(77,217,232,0.3); box-shadow: var(--glow-cyan); }
+.planet-visual {
+  height: 140px; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.planet-ball {
+  border-radius: 50%; box-shadow: -8px -8px 20px rgba(0,0,0,0.6) inset;
+  position: relative; z-index: 2;
+  animation: planet-rotate 12s linear infinite;
+}
+@keyframes planet-rotate {
+  from { filter: hue-rotate(0deg); }
+  to { filter: hue-rotate(8deg); }
+}
+.planet-card-body { padding: 1.3rem 1.5rem 1.5rem; }
+.planet-card-body h3 {
+  font-family: var(--font-display); font-size: .8rem;
+  letter-spacing: .15em; color: var(--star-white);
+  margin-bottom: .6rem; text-transform: uppercase;
+}
+.planet-card-body p { font-size: .95rem; color: var(--dim); line-height: 1.6; margin-bottom: 1rem; }
+.planet-stats { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.pstat {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 3px; padding: .5rem .7rem;
+}
+.pstat .lbl { font-family: var(--font-display); font-size: .48rem; letter-spacing: .12em; color: var(--dim); text-transform: uppercase; }
+.pstat .val { font-family: var(--font-display); font-size: .7rem; color: var(--gold); margin-top: .2rem; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 2.5rem; }
+.timeline::before {
+  content: ''; position: absolute; left: 6px; top: 0; bottom: 0;
+  width: 1px; background: linear-gradient(to bottom, var(--cyan), transparent);
+}
+.tl-item { position: relative; margin-bottom: 2.5rem; }
+.tl-dot {
+  position: absolute; left: -2.5rem; top: .3rem;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--void); border: 2px solid var(--cyan);
+  box-shadow: 0 0 12px rgba(77,217,232,0.5);
+}
+.tl-year {
+  font-family: var(--font-display); font-size: .6rem;
+  letter-spacing: .15em; color: var(--cyan); margin-bottom: .4rem;
+}
+.tl-title {
+  font-family: var(--font-display); font-size: .85rem;
+  letter-spacing: .08em; color: var(--star-white); margin-bottom: .5rem;
+}
+.tl-body { font-size: .95rem; color: var(--dim); line-height: 1.65; }
+.tl-badge {
+  display: inline-block; margin-top: .6rem;
+  font-family: var(--font-display); font-size: .5rem;
+  letter-spacing: .1em; padding: .25rem .7rem;
+  border-radius: 2px; border: 1px solid;
+}
+.tl-badge.nasa { color: #4dd9e8; border-color: rgba(77,217,232,0.4); }
+.tl-badge.soviet { color: #e84d4d; border-color: rgba(232,77,77,0.4); }
+.tl-badge.esa { color: #f5d98a; border-color: rgba(245,217,138,0.4); }
+.tl-badge.private { color: #8af576; border-color: rgba(138,245,118,0.4); }
+
+/* Telescope / gallery cards */
+.scope-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 1.5rem; }
+.scope-card {
+  background: var(--deep); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 6px; overflow: hidden;
+  transition: transform .3s, border-color .3s;
+}
+.scope-card:hover { transform: translateY(-4px); border-color: rgba(232,184,75,0.3); }
+.scope-header {
+  padding: 1.5rem; display: flex; align-items: flex-start; gap: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.scope-icon {
+  width: 48px; height: 48px; border-radius: 6px;
+  background: rgba(77,217,232,0.1); border: 1px solid rgba(77,217,232,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; flex-shrink: 0;
+}
+.scope-header h3 {
+  font-family: var(--font-display); font-size: .75rem;
+  letter-spacing: .1em; color: var(--star-white); margin-bottom: .3rem;
+}
+.scope-header span { font-size: .88rem; color: var(--dim); line-height: 1.4; display: block; }
+.scope-body { padding: 1.2rem 1.5rem 1.5rem; }
+.scope-body p { font-size: .92rem; color: var(--dim); line-height: 1.6; margin-bottom: 1rem; }
+.spec-row { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: .88rem; }
+.spec-row:last-child { border-bottom: none; }
+.spec-row .key { color: var(--dim); font-family: var(--font-display); font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; align-self: center; }
+.spec-row .val { color: var(--gold); font-family: var(--font-display); font-size: .68rem; }
+
+/* Curiosities */
+.curiosity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 1.2rem; }
+.curiosity-card {
+  background: rgba(77,217,232,0.04);
+  border: 1px solid rgba(77,217,232,0.12);
+  border-radius: 6px; padding: 1.5rem;
+  transition: background .2s, border-color .2s;
+  cursor: default;
+}
+.curiosity-card:hover { background: rgba(77,217,232,0.08); border-color: rgba(77,217,232,0.25); }
+.curiosity-card .c-num {
+  font-family: var(--font-display); font-size: 2rem;
+  font-weight: 900; color: var(--cyan); opacity: .2; line-height: 1; margin-bottom: .5rem;
+}
+.curiosity-card h4 {
+  font-family: var(--font-display); font-size: .72rem;
+  letter-spacing: .1em; color: var(--star-white); margin-bottom: .6rem;
+}
+.curiosity-card p { font-size: .9rem; color: var(--dim); line-height: 1.6; }
+
+/* Mision cards */
+.mission-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 1.4rem; }
+.mission-card {
+  background: var(--deep); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 1.5rem;
+  transition: transform .25s, border-color .25s;
+  cursor: pointer;
+}
+.mission-card:hover { transform: translateY(-4px); border-color: rgba(232,184,75,0.25); }
+.mission-agency {
+  font-family: var(--font-display); font-size: .52rem;
+  letter-spacing: .18em; margin-bottom: .6rem;
+  display: inline-block; padding: .2rem .6rem;
+  border-radius: 2px;
+}
+.agency-nasa { background: rgba(77,217,232,0.1); color: var(--cyan); border: 1px solid rgba(77,217,232,0.2); }
+.agency-esa { background: rgba(245,217,138,0.1); color: var(--gold); border: 1px solid rgba(245,217,138,0.2); }
+.agency-private { background: rgba(138,245,118,0.1); color: #8af576; border: 1px solid rgba(138,245,118,0.2); }
+.agency-china { background: rgba(232,77,77,0.1); color: #e84d4d; border: 1px solid rgba(232,77,77,0.2); }
+.mission-card h3 {
+  font-family: var(--font-display); font-size: .8rem;
+  letter-spacing: .1em; color: var(--star-white); margin-bottom: .5rem;
+}
+.mission-card p { font-size: .9rem; color: var(--dim); line-height: 1.6; margin-bottom: 1rem; }
+.mission-meta { display: flex; gap: .8rem; flex-wrap: wrap; }
+.mmeta {
+  font-family: var(--font-display); font-size: .5rem;
+  letter-spacing: .1em; color: var(--dim);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: .2rem .6rem; border-radius: 2px;
+}
+.mmeta.status-active { color: #8af576; border-color: rgba(138,245,118,0.3); }
+.mmeta.status-upcoming { color: var(--gold); border-color: rgba(232,184,75,0.3); }
+.mmeta.status-completed { color: var(--dim); border-color: rgba(255,255,255,0.1); }
+
+/* Quiz */
+.quiz-wrap { max-width: 680px; }
+.quiz-q {
+  font-family: var(--font-display); font-size: .8rem;
+  letter-spacing: .1em; color: var(--star-white);
+  margin-bottom: 1.2rem; line-height: 1.6;
+}
+.quiz-options { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.5rem; }
+.quiz-opt {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px; padding: .9rem 1.2rem;
+  cursor: pointer;
+  font-family: var(--font-display); font-size: .62rem;
+  letter-spacing: .08em; color: var(--dim);
+  transition: all .2s;
+  text-align: left; width: 100%;
+}
+.quiz-opt:hover:not(:disabled) { background: rgba(77,217,232,0.08); border-color: rgba(77,217,232,0.3); color: var(--star-white); }
+.quiz-opt.correct { background: rgba(138,245,118,0.12); border-color: rgba(138,245,118,0.4); color: #8af576; }
+.quiz-opt.wrong { background: rgba(232,77,77,0.12); border-color: rgba(232,77,77,0.4); color: #e84d4d; }
+.quiz-feedback {
+  font-family: var(--font-body); font-style: italic;
+  font-size: 1rem; color: var(--dim); line-height: 1.6;
+  min-height: 2.5rem; margin-bottom: 1rem;
+  padding: 1rem; background: rgba(77,217,232,0.04);
+  border-left: 3px solid var(--cyan); border-radius: 0 4px 4px 0;
+  display: none;
+}
+.quiz-feedback.show { display: block; }
+.quiz-progress {
+  font-family: var(--font-display); font-size: .55rem;
+  letter-spacing: .15em; color: var(--dim); margin-bottom: 2rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.qp-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.07); border-radius: 50px; }
+.qp-fill { height: 100%; background: var(--cyan); border-radius: 50px; width: 0; transition: width .5s; }
+.quiz-score {
+  font-family: var(--font-display); font-size: .65rem;
+  letter-spacing: .12em; color: var(--gold);
+  padding: 1.2rem; border: 1px solid rgba(232,184,75,0.2);
+  border-radius: 4px; text-align: center; display: none;
+}
+.quiz-score.show { display: block; }
+.quiz-score .big { font-size: 2rem; color: var(--gold); display: block; margin-bottom: .5rem; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+  background: var(--deep); color: var(--cyan);
+  border: 1px solid rgba(77,217,232,0.3);
+  padding: .9rem 1.5rem; border-radius: 4px;
+  font-family: var(--font-display); font-size: .6rem;
+  letter-spacing: .1em;
+  box-shadow: var(--glow-cyan);
+  transform: translateY(80px); opacity: 0;
+  transition: all .4s cubic-bezier(.4,0,.2,1);
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* Section header */
+.sec-header { margin-bottom: 2rem; }
+.sec-header h3 {
+  font-family: var(--font-display); font-size: .9rem;
+  letter-spacing: .15em; color: var(--star-white);
+  text-transform: uppercase; margin-bottom: .4rem;
+}
+.sec-header p { font-size: .95rem; color: var(--dim); font-style: italic; }
+
+@media(max-width:768px) {
+  nav { padding: 0 1rem; }
+  .nav-links { display: none; }
+  .inner-hero, .content-area { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .hero h1 { font-size: 2.8rem; }
+  .stats-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+<div id="toast"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a class="logo" onclick="showPage('home',this)">COS<span>MOS</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a class="active" onclick="showPage('home',this)">Inicio</a></li>
+    <li><a onclick="showPage('planetas',this)">Planetas</a></li>
+    <li><a onclick="showPage('historia',this)">Historia</a></li>
+    <li><a onclick="showPage('telescopios',this)">Telescopios</a></li>
+    <li><a onclick="showPage('misiones',this)">Misiones</a></li>
+    <li><a onclick="showPage('quiz',this)">Quiz</a></li>
+  </ul>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="searchInput" placeholder="Buscar en el cosmos…" autocomplete="off"/>
+    <div id="search-results"></div>
+  </div>
+</nav>
+
+<!-- ═══════════════ HOME ═══════════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-bg-circle hbc1"></div>
+    <div class="hero-bg-circle hbc2" style="animation:pulse-glow 8s ease-in-out infinite 2s;top:30%;right:10%;width:400px;height:400px;background:radial-gradient(circle,rgba(232,184,75,0.08) 0%,transparent 70%);transform:none;"></div>
+
+    <div class="hero-pretitle">// Exploración del Universo · Edición 2024</div>
+    <h1>EL <span class="gold">COSMOS</span><br/>NOS LLAMA</h1>
+    <p class="hero-sub">Un viaje interactivo por los planetas, las misiones históricas y los misterios del universo que aún esperan ser descubiertos.</p>
+
+    <div class="solar-preview">
+      <div class="orbit-ring orbit1"><div class="planet p1"></div></div>
+      <div class="orbit-ring orbit2"><div class="planet p2"></div></div>
+      <div class="orbit-ring orbit3"><div class="planet p3"></div></div>
+      <div class="sun"></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="showPage('planetas',null)">Explorar planetas ›</button>
+      <button class="btn btn-outline" onclick="showPage('quiz',null)">Poner a prueba mi conocimiento</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-block"><strong>8</strong><span>Planetas en el sistema solar</span></div>
+      <div class="stat-block"><strong>13.8B</strong><span>Años de antigüedad del universo</span></div>
+      <div class="stat-block"><strong>2 trillones</strong><span>Galaxias estimadas</span></div>
+      <div class="stat-block"><strong>299,792</strong><span>km/s — Velocidad de la luz</span></div>
+      <div class="stat-block"><strong>~400B</strong><span>Estrellas en la Vía Láctea</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PLANETAS ═══════════════ -->
+<div id="page-planetas" class="page">
+  <div class="inner-hero">
+    <button class="back-btn" onclick="showPage('home',null)">← INICIO</button>
+    <div class="page-tag">Sistema Solar</div>
+    <h2>LOS PLANETAS</h2>
+    <p>Ocho mundos extraordinariamente distintos orbitan nuestra estrella. Cada uno guarda secretos que la humanidad apenas comienza a descifrar.</p>
+  </div>
+  <div class="content-area">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('pl','interiores',this)">Interiores</button>
+      <button class="tab-btn" onclick="switchTab('pl','exteriores',this)">Exteriores</button>
+      <button class="tab-btn" onclick="switchTab('pl','comparativa',this)">Comparativa</button>
+    </div>
+
+    <div id="pl-interiores" class="tab-content active">
+      <div class="planet-grid">
+        <div class="planet-card" onclick="showToast('MERCURIO — El mundo más rápido del sistema solar')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#1a1008,#2a1f10)">
+            <div class="planet-ball" style="width:60px;height:60px;background:radial-gradient(circle at 35% 35%,#c8a878,#6b4a2a,#3d2810)"></div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Mercurio</h3>
+            <p>El planeta más pequeño y más cercano al Sol. Sin atmósfera, experimenta las temperaturas más extremas: desde -180°C hasta 430°C.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">57.9 M km</div></div>
+              <div class="pstat"><div class="lbl">Año (días)</div><div class="val">88 días</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">0</div></div>
+              <div class="pstat"><div class="lbl">Diámetro</div><div class="val">4,879 km</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="planet-card" onclick="showToast('VENUS — El planeta más caliente, no el más cercano al Sol')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#1a1408,#2a2010)">
+            <div class="planet-ball" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,#f5e078,#e8b840,#c88a10,#8a5a08)"></div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Venus</h3>
+            <p>El planeta más caliente del sistema solar (465°C promedio) gracias a su efecto invernadero extremo. Rota en sentido contrario a los demás.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">108.2 M km</div></div>
+              <div class="pstat"><div class="lbl">Año (días)</div><div class="val">225 días</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">0</div></div>
+              <div class="pstat"><div class="lbl">Temperatura</div><div class="val">465 °C</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="planet-card" onclick="showToast('TIERRA — El único planeta conocido con vida')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#080e1a,#0a1828)">
+            <div class="planet-ball" style="width:82px;height:82px;background:radial-gradient(circle at 38% 38%,#5ab4e8,#1a6fc9,#0a3a70);position:relative">
+              <div style="position:absolute;top:20%;left:25%;width:30%;height:20%;background:rgba(120,200,80,0.7);border-radius:50% 30% 60% 30%"></div>
+              <div style="position:absolute;top:50%;left:55%;width:20%;height:25%;background:rgba(120,200,80,0.6);border-radius:30% 50% 30% 60%"></div>
+            </div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Tierra</h3>
+            <p>Nuestro hogar. El único planeta confirmado con vida, agua líquida en superficie y una atmósfera que protege toda forma de existencia conocida.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">149.6 M km</div></div>
+              <div class="pstat"><div class="lbl">Año</div><div class="val">365.25 días</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">1 (La Luna)</div></div>
+              <div class="pstat"><div class="lbl">Vida</div><div class="val">Confirmada ✓</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="planet-card" onclick="showToast('MARTE — El destino más probable para la humanidad')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#1a0808,#280f0a)">
+            <div class="planet-ball" style="width:72px;height:72px;background:radial-gradient(circle at 35% 35%,#e8826a,#c94b2a,#7a2010)"></div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Marte</h3>
+            <p>El "Planeta Rojo". Posee el volcán más alto del sistema solar (Olympus Mons, 22 km) y evidencias de agua líquida en su pasado. Próximo destino humano.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">227.9 M km</div></div>
+              <div class="pstat"><div class="lbl">Año (días)</div><div class="val">687 días</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">2 (Fobos/Deimos)</div></div>
+              <div class="pstat"><div class="lbl">Gravedad</div><div class="val">38% de la Tierra</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pl-exteriores" class="tab-content">
+      <div class="planet-grid">
+        <div class="planet-card" onclick="showToast('JÚPITER — El gigante que protege la Tierra de asteroides')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#180e08,#200e08)">
+            <div class="planet-ball" style="width:110px;height:110px;background:radial-gradient(circle at 35% 35%,#e8c890,#c8884a,#a05828,#783010)">
+              <div style="position:absolute;bottom:30%;left:20%;width:35%;height:18%;background:rgba(180,80,50,0.8);border-radius:50%;filter:blur(2px)"></div>
+            </div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Júpiter</h3>
+            <p>El planeta más grande del sistema solar. Su Gran Mancha Roja es una tormenta que lleva más de 350 años activa. Tiene 95 lunas confirmadas.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">778.5 M km</div></div>
+              <div class="pstat"><div class="lbl">Año</div><div class="val">11.9 años</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">95</div></div>
+              <div class="pstat"><div class="lbl">Masa</div><div class="val">318× Tierra</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="planet-card" onclick="showToast('SATURNO — Sus anillos tienen 270,000 km de diámetro')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#161208,#1e180a)">
+            <div style="position:relative;width:130px;height:90px;display:flex;align-items:center;justify-content:center">
+              <div style="width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 38% 38%,#e8d890,#c8a840,#a87820);position:relative;z-index:2"></div>
+              <div style="position:absolute;width:140px;height:28px;border-radius:50%;border:6px solid rgba(232,184,75,0.3);z-index:1;transform:rotateX(70deg)"></div>
+            </div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Saturno</h3>
+            <p>Famoso por sus magníficos anillos de hielo y roca. Es el planeta menos denso del sistema solar: flotaría en agua. Posee 146 lunas.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">1,432 M km</div></div>
+              <div class="pstat"><div class="lbl">Año</div><div class="val">29.5 años</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">146</div></div>
+              <div class="pstat"><div class="lbl">Densidad</div><div class="val">< agua</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="planet-card" onclick="showToast('URANO — Rota de lado, con un eje inclinado 98°')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#081418,#0a1a20)">
+            <div class="planet-ball" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,#a0e8e8,#40b0c0,#1a7080)"></div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Urano</h3>
+            <p>El "planeta volcado": su eje de rotación está inclinado 98°, por lo que básicamente rueda sobre su órbita. Su atmósfera de metano le da color azul verdoso.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">2,871 M km</div></div>
+              <div class="pstat"><div class="lbl">Año</div><div class="val">84 años</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">28</div></div>
+              <div class="pstat"><div class="lbl">Inclinación</div><div class="val">97.77°</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="planet-card" onclick="showToast('NEPTUNO — Vientos de hasta 2,100 km/h')">
+          <div class="planet-visual" style="background:linear-gradient(135deg,#080c18,#0a1028)">
+            <div class="planet-ball" style="width:78px;height:78px;background:radial-gradient(circle at 35% 35%,#6090f0,#2040d0,#101880)"></div>
+          </div>
+          <div class="planet-card-body">
+            <h3>Neptuno</h3>
+            <p>El planeta más ventoso del sistema solar. Sus vientos alcanzan 2,100 km/h. Su luna Tritón orbita en sentido retrógrado, inusual en el sistema solar.</p>
+            <div class="planet-stats">
+              <div class="pstat"><div class="lbl">Distancia al Sol</div><div class="val">4,495 M km</div></div>
+              <div class="pstat"><div class="lbl">Año</div><div class="val">164.8 años</div></div>
+              <div class="pstat"><div class="lbl">Lunas</div><div class="val">16</div></div>
+              <div class="pstat"><div class="lbl">Vientos</div><div class="val">2,100 km/h</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pl-comparativa" class="tab-content">
+      <div class="sec-header"><h3>Tabla comparativa de planetas</h3><p>Todos los datos en relación con la Tierra = 1.0</p></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;background:var(--deep);border-radius:6px;overflow:hidden">
+          <thead><tr style="background:rgba(77,217,232,0.08)">
+            <th style="padding:.9rem 1.2rem;text-align:left;font-family:var(--font-display);font-size:.58rem;letter-spacing:.12em;color:var(--cyan)">PLANETA</th>
+            <th style="padding:.9rem 1.2rem;text-align:right;font-family:var(--font-display);font-size:.58rem;letter-spacing:.12em;color:var(--cyan)">DIÁMETRO</th>
+            <th style="padding:.9rem 1.2rem;text-align:right;font-family:var(--font-display);font-size:.58rem;letter-spacing:.12em;color:var(--cyan)">MASA</th>
+            <th style="padding:.9rem 1.2rem;text-align:right;font-family:var(--font-display);font-size:.58rem;letter-spacing:.12em;color:var(--cyan)">GRAVEDAD</th>
+            <th style="padding:.9rem 1.2rem;text-align:right;font-family:var(--font-display);font-size:.58rem;letter-spacing:.12em;color:var(--cyan)">DÍA (H)</th>
+            <th style="padding:.9rem 1.2rem;text-align:right;font-family:var(--font-display);font-size:.58rem;letter-spacing:.12em;color:var(--cyan)">TEMP MEDIA</th>
+          </tr></thead>
+          <tbody id="comp-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ HISTORIA ═══════════════ -->
+<div id="page-historia" class="page">
+  <div class="inner-hero">
+    <button class="back-btn" onclick="showPage('home',null)">← INICIO</button>
+    <div class="page-tag">Cronología espacial</div>
+    <h2>HISTORIA DE LA<br/>EXPLORACIÓN ESPACIAL</h2>
+    <p>Desde el primer satélite artificial hasta las misiones al espacio profundo, la humanidad ha extendido su alcance más allá de lo que cualquier generación anterior imaginó posible.</p>
+  </div>
+  <div class="content-area">
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1957</div><div class="tl-title">SPUTNIK 1 — Primer satélite artificial</div><div class="tl-body">La Unión Soviética lanzó el primer objeto artificial en orbitar la Tierra. Su señal de radio —un simple "bip bip"— inauguró la era espacial y provocó el pánico en Occidente, desencadenando la carrera espacial.</div><span class="tl-badge soviet">URSS / ROSCOSMOS</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1961</div><div class="tl-title">YURI GAGARIN — Primer humano en el espacio</div><div class="tl-body">El cosmonauta soviético orbitó la Tierra durante 108 minutos a bordo del Vostok 1. Frase inmortal al ver el planeta desde el espacio: "La Tierra es azul". Un hito que cambió la historia de la humanidad para siempre.</div><span class="tl-badge soviet">URSS / ROSCOSMOS</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1969</div><div class="tl-title">APOLO 11 — Primera pisada en la Luna</div><div class="tl-body">Neil Armstrong y Buzz Aldrin se convirtieron en los primeros humanos en caminar sobre la Luna. "Un pequeño paso para el hombre, un gran salto para la humanidad." Más de 600 millones de personas lo vieron en vivo por televisión.</div><span class="tl-badge nasa">NASA</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1977</div><div class="tl-title">VOYAGER 1 Y 2 — Hacia el espacio interestelar</div><div class="tl-body">Lanzadas con semanas de diferencia, ambas sondas aprovecharon una alineación planetaria única que ocurre cada 176 años. Voyager 1 es hoy el objeto construido por humanos más lejano de la Tierra, a más de 23,000 millones de km.</div><span class="tl-badge nasa">NASA</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1990</div><div class="tl-title">TELESCOPIO HUBBLE — Los ojos de la humanidad en el cosmos</div><div class="tl-body">Su lanzamiento —y la corrección de su espejo defectuoso en 1993— revolucionó la astronomía. Hubble demostró que el universo se está expandiendo aceleradamente y fotografió galaxias a 13,000 millones de años luz.</div><span class="tl-badge nasa">NASA / ESA</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1998</div><div class="tl-title">ESTACIÓN ESPACIAL INTERNACIONAL (EEI)</div><div class="tl-body">16 naciones unidas construyeron la estructura más grande jamás ensamblada en el espacio. Desde noviembre de 2000 ha tenido presencia humana ininterrumpida. Una demostración de que la cooperación internacional es posible incluso en la exploración del cosmos.</div><span class="tl-badge nasa">NASA / ESA / ROSCOSMOS</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2004</div><div class="tl-title">SPIRIT Y OPPORTUNITY — Rovers en Marte</div><div class="tl-body">Diseñados para durar 90 días, Opportunity operó durante 15 años, cubriendo más de 45 km en Marte. Confirmaron que el planeta tuvo agua líquida en su superficie, elevando las posibilidades de vida pasada.</div><span class="tl-badge nasa">NASA</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2015</div><div class="tl-title">NEW HORIZONS — Primera visita a Plutón</div><div class="tl-body">Después de 9 años de viaje, la sonda sobrevoló Plutón a 12,500 km de su superficie, revelando montañas de hielo de más de 3,000 metros, una atmósfera nitrogenada y el famoso "corazón" de Tombaugh Regio.</div><span class="tl-badge nasa">NASA</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2019</div><div class="tl-title">PRIMERA IMAGEN DE UN AGUJERO NEGRO</div><div class="tl-body">El Event Horizon Telescope, una red mundial de radiotelescopios, capturó la primera imagen del agujero negro supermasivo M87*, a 55 millones de años luz de la Tierra, confirmando experimentalmente predicciones de la relatividad general de Einstein.</div><span class="tl-badge esa">EHT / COLABORACIÓN GLOBAL</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2021</div><div class="tl-title">JAMES WEBB — La máquina del tiempo más poderosa</div><div class="tl-body">Lanzado el 25 de diciembre de 2021, el JWST observa el universo en infrarrojo con una sensibilidad 100 veces mayor que Hubble. Ya fotografió galaxias que existían 200 millones de años después del Big Bang, transformando nuestra comprensión del cosmos.</div><span class="tl-badge esa">NASA / ESA / CSA</span></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2024</div><div class="tl-title">ARTEMIS — Regreso a la Luna</div><div class="tl-body">El programa Artemis de NASA planea establecer una presencia humana sostenible en la Luna por primera vez desde 1972. Incluirá la primera mujer y la primera persona no blanca en pisar suelo lunar, como paso previo a Marte.</div><span class="tl-badge nasa">NASA</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TELESCOPIOS ═══════════════ -->
+<div id="page-telescopios" class="page">
+  <div class="inner-hero">
+    <button class="back-btn" onclick="showPage('home',null)">← INICIO</button>
+    <div class="page-tag">Instrumentos de observación</div>
+    <h2>TELESCOPIOS &amp;<br/>OBSERVATORIOS</h2>
+    <p>Los ojos con que la humanidad mira al universo. Desde lentes ópticos en tierra hasta observatorios en el espacio que capturan luz de hace millones de años.</p>
+  </div>
+  <div class="content-area">
+    <div class="scope-grid">
+      <div class="scope-card">
+        <div class="scope-header"><div class="scope-icon">🔭</div><div><h3>JAMES WEBB SPACE TELESCOPE</h3><span>NASA / ESA / CSA · 2021–presente</span></div></div>
+        <div class="scope-body">
+          <p>El observatorio espacial más avanzado jamás construido. Detecta luz infrarroja de objetos a 13,600 millones de años luz, permitiendo "ver" el universo primigenio. Su espejo primario de 6.5 m está compuesto de 18 segmentos hexagonales de berilio cubiertos de oro.</p>
+          <div class="spec-row"><span class="key">Espejo principal</span><span class="val">6.5 m de diámetro</span></div>
+          <div class="spec-row"><span class="key">Ubicación</span><span class="val">Punto Lagrange L2 (1.5 M km)</span></div>
+          <div class="spec-row"><span class="key">Rango espectral</span><span class="val">0.6 – 28.3 micrones</span></div>
+          <div class="spec-row"><span class="key">Temperatura operativa</span><span class="val">−233 °C</span></div>
+          <div class="spec-row"><span class="key">Costo de desarrollo</span><span class="val">~10,000 M USD</span></div>
+        </div>
+      </div>
+      <div class="scope-card">
+        <div class="scope-header"><div class="scope-icon">🌌</div><div><h3>HUBBLE SPACE TELESCOPE</h3><span>NASA / ESA · 1990–presente</span></div></div>
+        <div class="scope-body">
+          <p>Más de 34 años en órbita y más de 1.5 millones de observaciones. Hubble ha contribuido a más de 20,000 artículos científicos y sus imágenes —las Eagle Nebula, Deep Field— son las más icónicas de la astronomía moderna.</p>
+          <div class="spec-row"><span class="key">Espejo principal</span><span class="val">2.4 m de diámetro</span></div>
+          <div class="spec-row"><span class="key">Órbita</span><span class="val">547 km sobre la Tierra</span></div>
+          <div class="spec-row"><span class="key">Velocidad orbital</span><span class="val">27,300 km/h</span></div>
+          <div class="spec-row"><span class="key">Observaciones</span><span class="val">+1.5 millones</span></div>
+          <div class="spec-row"><span class="key">Imágenes del universo</span><span class="val">Hasta 13.4B años luz</span></div>
+        </div>
+      </div>
+      <div class="scope-card">
+        <div class="scope-header"><div class="scope-icon">📡</div><div><h3>VERY LARGE TELESCOPE (VLT)</h3><span>ESO · Cerro Paranal, Chile</span></div></div>
+        <div class="scope-body">
+          <p>El observatorio óptico más productivo del mundo, ubicado en el desierto de Atacama. Cuatro telescopios de 8.2 m que pueden combinarse para simular un espejo de 130 m de diámetro mediante interferometría.</p>
+          <div class="spec-row"><span class="key">Altitud</span><span class="val">2,635 m s.n.m.</span></div>
+          <div class="spec-row"><span class="key">Espejos</span><span class="val">4 × 8.2 m + 4 × 1.8 m</span></div>
+          <div class="spec-row"><span class="key">Apertura combinada</span><span class="val">Equiv. 130 m</span></div>
+          <div class="spec-row"><span class="key">Noches de observación</span><span class="val">+340 por año</span></div>
+          <div class="spec-row"><span class="key">Publicaciones</span><span class="val">+10,000 artículos</span></div>
+        </div>
+      </div>
+      <div class="scope-card">
+        <div class="scope-header"><div class="scope-icon">⚡</div><div><h3>EVENT HORIZON TELESCOPE (EHT)</h3><span>Colaboración global · 2009–presente</span></div></div>
+        <div class="scope-body">
+          <p>No es un único telescopio sino una red global de radiotelescopios que actúan como un detector del tamaño de la Tierra. Logró la primera imagen real de un agujero negro en 2019 y la primera imagen de Sgr A*, el agujero negro en el centro de nuestra galaxia, en 2022.</p>
+          <div class="spec-row"><span class="key">Apertura efectiva</span><span class="val">Diámetro de la Tierra</span></div>
+          <div class="spec-row"><span class="key">Observatorios</span><span class="val">12 sitios en 4 continentes</span></div>
+          <div class="spec-row"><span class="key">Resolución</span><span class="val">20 microarcosegundos</span></div>
+          <div class="spec-row"><span class="key">Primer logro</span><span class="val">Imagen de M87* (2019)</span></div>
+          <div class="spec-row"><span class="key">Segundo logro</span><span class="val">Imagen de Sgr A* (2022)</span></div>
+        </div>
+      </div>
+      <div class="scope-card">
+        <div class="scope-header"><div class="scope-icon">🏔️</div><div><h3>EXTREMELY LARGE TELESCOPE (ELT)</h3><span>ESO · En construcción, Chile · 2028</span></div></div>
+        <div class="scope-body">
+          <p>El telescopio óptico más grande del mundo, actualmente en construcción en el Cerro Armazones, Chile. Su espejo principal de 39 metros tendrá una resolución 15 veces mayor que el Hubble y será capaz de fotografiar exoplanetas directamente.</p>
+          <div class="spec-row"><span class="key">Espejo principal</span><span class="val">39 metros — récord mundial</span></div>
+          <div class="spec-row"><span class="key">Segmentos del espejo</span><span class="val">798 hexágonos</span></div>
+          <div class="spec-row"><span class="key">Altitud</span><span class="val">3,046 m s.n.m.</span></div>
+          <div class="spec-row"><span class="key">Año de primera luz</span><span class="val">~2028</span></div>
+          <div class="spec-row"><span class="key">Presupuesto</span><span class="val">1,300 M € (est.)</span></div>
+        </div>
+      </div>
+      <div class="scope-card">
+        <div class="scope-header"><div class="scope-icon">🛰️</div><div><h3>TELESCOPIO CHANDRA — RAYOS X</h3><span>NASA · 1999–presente</span></div></div>
+        <div class="scope-body">
+          <p>El observatorio de rayos X más potente jamás construido. Estudia los objetos más energéticos del universo: agujeros negros, estrellas de neutrones, materia oscura y la estructura a gran escala del cosmos.</p>
+          <div class="spec-row"><span class="key">Tipo</span><span class="val">Observatorio de rayos X</span></div>
+          <div class="spec-row"><span class="key">Órbita</span><span class="val">133,000 km (elíptica)</span></div>
+          <div class="spec-row"><span class="key">Espejo</span><span class="val">4 pares de espejos</span></div>
+          <div class="spec-row"><span class="key">Resolución angular</span><span class="val">0.5 arcosegundos</span></div>
+          <div class="spec-row"><span class="key">En operación</span><span class="val">+25 años continúos</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Curiosidades -->
+    <div class="sec-header" style="margin-top:3rem"><h3>Curiosidades del cosmos</h3><p>Datos que desafían la comprensión humana del universo</p></div>
+    <div class="curiosity-grid">
+      <div class="curiosity-card"><div class="c-num">01</div><h4>El universo tiene 13,800 millones de años</h4><p>Si comprimiéramos toda la historia del universo en un año calendario, los humanos aparecemos en los últimos 10 segundos del 31 de diciembre.</p></div>
+      <div class="curiosity-card"><div class="c-num">02</div><h4>Hay más estrellas que granos de arena en la Tierra</h4><p>Se estiman 10²⁴ estrellas en el universo observable, frente a "solo" unos 10¹⁹ granos de arena en todas las playas y desiertos del planeta.</p></div>
+      <div class="curiosity-card"><div class="c-num">03</div><h4>El 95% del universo es invisible</h4><p>La materia ordinaria (estrellas, planetas, gas) constituye apenas un 5% del universo. El 68% es energía oscura y el 27% es materia oscura, ambas aún inexplicadas.</p></div>
+      <div class="curiosity-card"><div class="c-num">04</div><h4>Una cucharada de estrella de neutrones pesa 1,000 millones de toneladas</h4><p>Las estrellas de neutrones son tan densas que comprimen la masa del Sol en una esfera de solo 20 km de diámetro. Su gravedad deformaría el espacio-tiempo a su alrededor.</p></div>
+      <div class="curiosity-card"><div class="c-num">05</div><h4>Los átomos de tu cuerpo fueron forjados en estrellas</h4><p>El hidrógeno de tu cuerpo viene del Big Bang. El carbono, oxígeno y hierro fueron creados en el interior de estrellas masivas que explotaron antes de que existiera el Sol.</p></div>
+      <div class="curiosity-card"><div class="c-num">06</div><h4>La Vía Láctea y Andrómeda chocarán en 4,500 millones de años</h4><p>La galaxia de Andrómeda se acerca a nosotros a 110 km/s. La colisión durará cientos de millones de años, pero es tan poco denso el espacio que ninguna estrella colisionará directamente.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MISIONES ═══════════════ -->
+<div id="page-misiones" class="page">
+  <div class="inner-hero">
+    <button class="back-btn" onclick="showPage('home',null)">← INICIO</button>
+    <div class="page-tag">Exploración activa</div>
+    <h2>MISIONES ESPACIALES</h2>
+    <p>Las naves, rovers y sondas que en este momento están extendiendo el alcance humano a través del sistema solar y más allá.</p>
+  </div>
+  <div class="content-area">
+    <div class="filter-bar" id="mission-filter" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.8rem">
+      <button class="filter-btn active" onclick="filterMissions('all',this)">TODAS</button>
+      <button class="filter-btn" onclick="filterMissions('NASA',this)">NASA</button>
+      <button class="filter-btn" onclick="filterMissions('ESA',this)">ESA</button>
+      <button class="filter-btn" onclick="filterMissions('private',this)">PRIVADAS</button>
+      <button class="filter-btn" onclick="filterMissions('CNSA',this)">CNSA (CHINA)</button>
+    </div>
+    <div class="mission-grid" id="mission-grid">
+      <div class="mission-card" data-agency="NASA" onclick="showToast('Perseverance sigue explorando Jezero Crater, Marte')"><span class="mission-agency agency-nasa">NASA</span><h3>PERSEVERANCE ROVER</h3><p>Operando en el cráter Jezero de Marte desde febrero de 2021. Busca evidencias de vida microbiana antigua y recolecta muestras para su futura devolución a la Tierra.</p><div class="mission-meta"><span class="mmeta status-active">● ACTIVA</span><span class="mmeta">🎯 MARTE</span><span class="mmeta">📅 2020–PRESENTE</span></div></div>
+      <div class="mission-card" data-agency="NASA" onclick="showToast('James Webb ya fotografió el universo a 200M años del Big Bang')"><span class="mission-agency agency-nasa">NASA / ESA / CSA</span><h3>JAMES WEBB TELESCOPE</h3><p>El telescopio espacial más poderoso de la historia. Observa el universo en infrarrojo desde el punto Lagrange L2, a 1.5 millones de km de la Tierra.</p><div class="mission-meta"><span class="mmeta status-active">● ACTIVA</span><span class="mmeta">🎯 L2 LAGRANGE</span><span class="mmeta">📅 2021–PRESENTE</span></div></div>
+      <div class="mission-card" data-agency="NASA" onclick="showToast('Voyager 1 está en el espacio interestelar, a 23 mil millones de km')"><span class="mission-agency agency-nasa">NASA</span><h3>VOYAGER 1 — ESPACIO INTERESTELAR</h3><p>Lanzada en 1977, es el objeto más lejano construido por humanos. Cruzó la heliopausa en 2012 y ahora viaja por el espacio interestelar. Aún transmite señales a la Tierra.</p><div class="mission-meta"><span class="mmeta status-active">● ACTIVA</span><span class="mmeta">🎯 ESPACIO INTERESTELAR</span><span class="mmeta">📅 1977–PRESENTE</span></div></div>
+      <div class="mission-card" data-agency="NASA" onclick="showToast('Artemis llevará humanos a la Luna por primera vez desde 1972')"><span class="mission-agency agency-nasa">NASA</span><h3>PROGRAMA ARTEMIS</h3><p>Programa de exploración lunar con objetivo de aterrizar en el Polo Sur de la Luna antes de 2027. Incluirá la primera mujer en pisar suelo lunar e instalará la estación Gateway en órbita lunar.</p><div class="mission-meta"><span class="mmeta status-upcoming">◎ EN CURSO</span><span class="mmeta">🎯 LUNA</span><span class="mmeta">📅 2022–2027</span></div></div>
+      <div class="mission-card" data-agency="ESA" onclick="showToast('Juice llegará a las lunas de Júpiter en 2031')"><span class="mission-agency agency-esa">ESA</span><h3>JUICE — JUPITER ICY MOONS</h3><p>Lanzada en abril de 2023, JUICE (Jupiter Icy Moons Explorer) viajará a las lunas heladas de Júpiter —Europa, Ganimedes y Calisto— buscando océanos subsuperficiales con posible vida.</p><div class="mission-meta"><span class="mmeta status-active">● EN TRÁNSITO</span><span class="mmeta">🎯 LUNAS DE JÚPITER</span><span class="mmeta">📅 2023–2035</span></div></div>
+      <div class="mission-card" data-agency="ESA" onclick="showToast('BepiColombo orbitará Mercurio a partir de 2025')"><span class="mission-agency agency-esa">ESA / JAXA</span><h3>BEPICOLOMBO — MERCURIO</h3><p>Misión conjunta europea-japonesa en camino a Mercurio. Estudiará su campo magnético, geología interior y la influencia del viento solar. Llegará a órbita en 2026.</p><div class="mission-meta"><span class="mmeta status-active">● EN TRÁNSITO</span><span class="mmeta">🎯 MERCURIO</span><span class="mmeta">📅 2018–2026</span></div></div>
+      <div class="mission-card" data-agency="private" onclick="showToast('Starship realizó su cuarto vuelo de prueba en 2024')"><span class="mission-agency agency-private">SPACEX</span><h3>STARSHIP — SISTEMA DE TRANSPORTE</h3><p>El cohete más grande jamás construido, diseñado para llevar humanos a la Luna y Marte. Reutilizable al 100%, con capacidad de carga de 100–150 toneladas a órbita baja terrestre.</p><div class="mission-meta"><span class="mmeta status-upcoming">◎ DESARROLLO</span><span class="mmeta">🎯 LUNA / MARTE</span><span class="mmeta">📅 2019–FUTURO</span></div></div>
+      <div class="mission-card" data-agency="private" onclick="showToast('New Shepard reintrodujo el turismo espacial suborbital')"><span class="mission-agency agency-private">BLUE ORIGIN</span><h3>NEW SHEPARD / NEW GLENN</h3><p>New Shepard ofrece vuelos suborbitales turísticos desde 2021. New Glenn, su cohete orbital masivo, amplía las capacidades de transporte espacial comercial a órbita geoestacionaria.</p><div class="mission-meta"><span class="mmeta status-active">● OPERATIVO</span><span class="mmeta">🎯 ESPACIO SUBORBITAL</span><span class="mmeta">📅 2021–PRESENTE</span></div></div>
+      <div class="mission-card" data-agency="CNSA" onclick="showToast('China planea aterrizar en la Luna antes de 2030')"><span class="mission-agency agency-china">CNSA (CHINA)</span><h3>TIANWEN-1 — MARTE</h3><p>China se convirtió en solo el tercer país en aterrizar con éxito en Marte. El rover Zhurong exploró la llanura de Utopia Planitia, descubriendo evidencias de agua en el pasado reciente marciano.</p><div class="mission-meta"><span class="mmeta status-completed">✓ COMPLETADA</span><span class="mmeta">🎯 MARTE</span><span class="mmeta">📅 2021–2022</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ QUIZ ═══════════════ -->
+<div id="page-quiz" class="page">
+  <div class="inner-hero">
+    <button class="back-btn" onclick="showPage('home',null)">← INICIO</button>
+    <div class="page-tag">Pon a prueba tu conocimiento</div>
+    <h2>QUIZ DEL<br/>COSMOS</h2>
+    <p>10 preguntas sobre astronomía, exploración espacial y los misterios del universo. ¿Cuánto sabes realmente sobre el cosmos?</p>
+  </div>
+  <div class="content-area">
+    <div class="quiz-wrap">
+      <div class="quiz-progress">
+        <span id="qp-text">PREGUNTA 1 / 10</span>
+        <div class="qp-bar"><div class="qp-fill" id="qpf"></div></div>
+        <span id="qp-score">PUNTOS: 0</span>
+      </div>
+      <div id="quiz-question" class="quiz-q"></div>
+      <div id="quiz-options" class="quiz-options"></div>
+      <div id="quiz-feedback" class="quiz-feedback"></div>
+      <button id="quiz-next" class="btn btn-primary" onclick="nextQuestion()" style="display:none;margin-top:.5rem">SIGUIENTE →</button>
+      <div id="quiz-score-final" class="quiz-score"></div>
+      <button id="quiz-restart" class="btn btn-outline" onclick="startQuiz()" style="display:none;margin-top:1rem">↺ JUGAR DE NUEVO</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STARFIELD ───
+(function(){
+  const sf = document.getElementById('starfield');
+  for(let i=0;i<200;i++){
+    const s = document.createElement('div');
+    s.className='star-dot';
+    const sz = Math.random()*2.2+.4;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*5}s;--min-op:${.1+Math.random()*.4}`;
+    sf.appendChild(s);
+  }
+})();
+
+// ─── PLANET TABLE DATA ───
+const planetData = [
+  ['☿ Mercurio','0.38','0.06','0.38','1407.6 h','167 °C'],
+  ['♀ Venus',   '0.95','0.81','0.90','5832 h',  '464 °C'],
+  ['⊕ Tierra',  '1.00','1.00','1.00','24 h',    '15 °C'],
+  ['♂ Marte',   '0.53','0.11','0.38','24.6 h',  '−60 °C'],
+  ['♃ Júpiter', '11.2','317.8','2.36','9.9 h',  '−110 °C'],
+  ['♄ Saturno', '9.45','95.2','0.92','10.7 h',  '−140 °C'],
+  ['⛢ Urano',  '4.01','14.5','0.89','17.2 h',  '−195 °C'],
+  ['♆ Neptuno', '3.88','17.1','1.12','16.1 h',  '−200 °C'],
+];
+(function(){
+  const tbody = document.getElementById('comp-body');
+  if(!tbody) return;
+  planetData.forEach((r,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = r.map((c,ci)=>`<td style="padding:.75rem 1.2rem;border-bottom:1px solid rgba(255,255,255,0.05);font-family:${ci===0?'var(--font-display)':'var(--font-body)'};font-size:${ci===0?'.72rem':'1rem'};letter-spacing:${ci===0?'.08em':'0'};color:${ci===0?'var(--star-white)':'var(--dim)'};text-align:${ci===0?'left':'right'}">${c}</td>`).join('');
+    if(i%2===0) tr.style.background='rgba(255,255,255,0.02)';
+    tbody.appendChild(tr);
+  });
+})();
+
+// ─── PAGES ───
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,0);
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(id==='quiz') startQuiz();
+}
+
+// ─── TABS ───
+function switchTab(page,tab,btn){
+  document.querySelectorAll(`#page-${page} .tab-content`).forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll(`#page-${page} .tab-btn`).forEach(b=>b.classList.remove('active'));
+  document.getElementById(`${page}-${tab}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── TOAST ───
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── SEARCH ───
+const searchData=[
+  {l:'🪐 Sistema Solar — planetas interiores',p:'planetas'},
+  {l:'🪐 Sistema Solar — planetas exteriores',p:'planetas'},
+  {l:'📅 Historia del espacio — Apolo 11',p:'historia'},
+  {l:'📅 Voyager 1 y 2',p:'historia'},
+  {l:'📅 Telescopio Hubble',p:'historia'},
+  {l:'🔭 James Webb Space Telescope',p:'telescopios'},
+  {l:'🔭 Very Large Telescope — Chile',p:'telescopios'},
+  {l:'🚀 Misiones activas — Perseverance',p:'misiones'},
+  {l:'🚀 Programa Artemis — regreso a la Luna',p:'misiones'},
+  {l:'🚀 SpaceX Starship',p:'misiones'},
+  {l:'❓ Quiz del cosmos — pon a prueba tus conocimientos',p:'quiz'},
+  {l:'🌌 Curiosidades del universo',p:'telescopios'},
+  {l:'⚫ Agujeros negros',p:'historia'},
+  {l:'🌍 Tierra — datos del planeta',p:'planetas'},
+  {l:'♂ Marte — el planeta rojo',p:'planetas'},
+];
+const inp=document.getElementById('searchInput');
+const res=document.getElementById('search-results');
+inp.addEventListener('input',()=>{
+  const q=inp.value.toLowerCase().trim();
+  if(!q){res.classList.remove('show');return;}
+  const f=searchData.filter(d=>d.l.toLowerCase().includes(q));
+  if(!f.length){res.classList.remove('show');return;}
+  res.innerHTML=f.map(d=>`<div class="s-item" onclick="goSearch('${d.p}')">${d.l}</div>`).join('');
+  res.classList.add('show');
+});
+function goSearch(p){showPage(p,null);inp.value='';res.classList.remove('show');}
+document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))res.classList.remove('show');});
+
+// ─── MISSION FILTER ───
+function filterMissions(agency,btn){
+  document.querySelectorAll('#mission-filter .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.mission-card').forEach(c=>{
+    c.style.display=(agency==='all'||c.dataset.agency===agency)?'block':'none';
+  });
+}
+// filter-btn style
+document.head.insertAdjacentHTML('beforeend',`<style>.filter-btn{font-family:var(--font-display);font-size:.55rem;letter-spacing:.12em;padding:.5rem 1.1rem;border-radius:3px;border:1px solid rgba(77,217,232,0.2);background:transparent;color:var(--dim);cursor:pointer;transition:all .2s;}.filter-btn:hover,.filter-btn.active{background:rgba(77,217,232,0.1);border-color:var(--cyan);color:var(--cyan);}</style>`);
+
+// ─── QUIZ ───
+const quizData = [
+  {q:"¿Cuál es el planeta más grande del Sistema Solar?",opts:["Saturno","Júpiter","Neptuno","Urano"],a:1,exp:"Júpiter tiene una masa 318 veces mayor que la Tierra y podría contener a todos los demás planetas juntos con espacio de sobra."},
+  {q:"¿En qué año el ser humano pisó la Luna por primera vez?",opts:["1965","1967","1969","1971"],a:2,exp:"Neil Armstrong y Buzz Aldrin aterrizaron en el Mar de la Tranquilidad el 20 de julio de 1969 a bordo del Apolo 11."},
+  {q:"¿Qué porcentaje del universo es materia ordinaria (estrellas, planetas, gas)?",opts:["5%","27%","50%","68%"],a:0,exp:"Solo el 5% del universo es materia 'ordinaria'. El 27% es materia oscura y el 68% es energía oscura, ambas aún no comprendidas completamente."},
+  {q:"¿A qué velocidad viaja la luz en el vacío?",opts:["150,000 km/s","299,792 km/s","400,000 km/s","1 millón km/s"],a:1,exp:"La velocidad de la luz es exactamente 299,792,458 metros por segundo, la velocidad límite del universo según la teoría de la relatividad especial de Einstein."},
+  {q:"¿Cuál es el objeto más lejano de fabricación humana?",opts:["Voyager 2","New Horizons","Pionner 10","Voyager 1"],a:3,exp:"Voyager 1, lanzada en 1977, se encuentra a más de 23,000 millones de km de la Tierra y ya viaja por el espacio interestelar más allá de la heliopausa."},
+  {q:"¿Qué planeta tiene la atmósfera más caliente del Sistema Solar?",opts:["Mercurio","Júpiter","Venus","Marte"],a:2,exp:"Venus tiene una temperatura media de 465°C, más caliente que Mercurio pese a estar más lejos del Sol, gracias a su densa atmósfera de CO₂ con un efecto invernadero extremo."},
+  {q:"¿Cuántos años tiene aproximadamente el universo?",opts:["4,500 millones","8,000 millones","13,800 millones","20,000 millones"],a:2,exp:"El universo tiene aproximadamente 13,800 millones de años, medido a partir de la radiación cósmica de fondo de microondas y la expansión acelerada del universo."},
+  {q:"¿Qué misión tomó la primera imagen de un agujero negro en 2019?",opts:["James Webb","Hubble","Event Horizon Telescope","Chandra"],a:2,exp:"El Event Horizon Telescope, una red global de radiotelescopios, fotografió el agujero negro M87* en la galaxia M87 en 2019, confirmando predicciones de la relatividad general."},
+  {q:"¿Cuál es el volcán más alto del Sistema Solar?",opts:["Mauna Kea (Tierra)","Ascraeus Mons (Marte)","Olympus Mons (Marte)","Monte Everest (Tierra)"],a:2,exp:"Olympus Mons en Marte tiene 22 km de altitud, casi 3 veces el Everest. Su base tiene 600 km de diámetro, equivalente al tamaño de Francia."},
+  {q:"¿Qué galaxia se dirige hacia la Vía Láctea a 110 km/s?",opts:["La Gran Nube de Magallanes","Triangulum (M33)","Andrómeda (M31)","NGC 1316"],a:2,exp:"La galaxia de Andrómeda colisionará con la Vía Láctea en aproximadamente 4,500 millones de años. Sin embargo, es tan poco denso el espacio que ninguna estrella chocará directamente."},
+];
+
+let curQ=0, score=0, answered=false;
+function startQuiz(){
+  curQ=0; score=0; answered=false;
+  document.getElementById('quiz-score-final').classList.remove('show');
+  document.getElementById('quiz-restart').style.display='none';
+  document.getElementById('quiz-next').style.display='none';
+  document.getElementById('quiz-feedback').classList.remove('show');
+  renderQuestion();
+}
+function renderQuestion(){
+  if(curQ>=quizData.length){ endQuiz(); return; }
+  const q=quizData[curQ]; answered=false;
+  document.getElementById('quiz-question').textContent=`${curQ+1}. ${q.q}`;
+  document.getElementById('quiz-options').innerHTML=q.opts.map((o,i)=>
+    `<button class="quiz-opt" onclick="answer(${i})">${String.fromCharCode(65+i)}. ${o}</button>`
+  ).join('');
+  document.getElementById('quiz-feedback').classList.remove('show');
+  document.getElementById('quiz-next').style.display='none';
+  document.getElementById('qp-text').textContent=`PREGUNTA ${curQ+1} / ${quizData.length}`;
+  document.getElementById('qpf').style.width=`${(curQ/quizData.length)*100}%`;
+  document.getElementById('qp-score').textContent=`PUNTOS: ${score}`;
+}
+function answer(i){
+  if(answered) return;
+  answered=true;
+  const q=quizData[curQ];
+  const btns=document.querySelectorAll('.quiz-opt');
+  btns.forEach(b=>b.disabled=true);
+  if(i===q.a){ btns[i].classList.add('correct'); score++; }
+  else { btns[i].classList.add('wrong'); btns[q.a].classList.add('correct'); }
+  const fb=document.getElementById('quiz-feedback');
+  fb.textContent=q.exp; fb.classList.add('show');
+  document.getElementById('quiz-next').style.display='inline-flex';
+  document.getElementById('qp-score').textContent=`PUNTOS: ${score}`;
+}
+function nextQuestion(){
+  curQ++;
+  document.getElementById('quiz-feedback').classList.remove('show');
+  document.getElementById('quiz-next').style.display='none';
+  renderQuestion();
+}
+function endQuiz(){
+  const medals=['🪐','⭐','🌟','🏆'];
+  const m = score>=9?3:score>=7?2:score>=5?1:0;
+  const msgs=['Sigue estudiando el cosmos — el universo es infinito','Buen comienzo, ¡el cosmos tiene más secretos para ti!','¡Impresionante! Tienes un conocimiento sólido del espacio','¡PERFECTO! Eres un verdadero explorador del cosmos'];
+  document.getElementById('quiz-score-final').innerHTML=`<span class="big">${medals[m]} ${score} / ${quizData.length}</span>${msgs[m]}`;
+  document.getElementById('quiz-score-final').classList.add('show');
+  document.getElementById('quiz-restart').style.display='inline-flex';
+  document.getElementById('qpf').style.width='100%';
+}
+
+// ─── SCROLL NAV ───
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').style.boxShadow=window.scrollY>30?'0 2px 30px rgba(0,0,0,0.6)':'none';
+});
+</script>
+</body>
+</html>
